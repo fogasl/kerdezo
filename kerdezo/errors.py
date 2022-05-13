@@ -1,0 +1,2 @@
+class InteractiveError(Exception):
+    pass
