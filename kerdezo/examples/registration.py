@@ -31,7 +31,7 @@ def failHandler(ex, ctx):
 
 
 # Define methods for validation
-def validateBirthYear(value, context):
+def validateBirthYear(value, question, context):
     """Validate the Birth Year question.
     Values lower than 1900 or greater that the current year treated as invalid.
 
@@ -50,7 +50,7 @@ def validateBirthYear(value, context):
         )
 
 
-def validateRepeatPassword(value, context):
+def validateRepeatPassword(value, question, context):
     """Validate the 'Repeat password' question.
     This function checks equality with the answer for the 'Password' question.
 
@@ -67,7 +67,7 @@ def validateRepeatPassword(value, context):
         )
 
 
-def tosValidator(value, context):
+def tosValidator(value, question, context):
     """Validate the 'Terms of Service' question.
 
     Args:

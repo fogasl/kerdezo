@@ -3,18 +3,23 @@ import sys
 
 from kerdezo import Kerdezo
 
-def ipAddressValidator(value, context):
+def ipAddressValidator(value, question, context):
     ipaddress.ip_address(value)  # Raises exception on invalid IP address input
 
-def portNumberValidator(value, context):
+
+def portNumberValidator(value, question, context):
     if value < 1 or value > 65535:
         raise ValueError(f"Invalid port number: {value}")
+
+
+def setPortNumberByProtocol(value, question, context):
+    port = 80 if value == "http" else 443
+    context.getQuestion("Port").default = port
+
 
 def failHandler(err, context):
     print(f"Error: {err}", file=sys.stderr)
 
-def protocolAnswerHook(value, context):
-    pass
 
 if __name__ == "__main__":
     suite = Kerdezo(
@@ -33,9 +38,7 @@ To get help on a question, answer with '?' (without apostrophes)
     suite.addQuestion(
         "Protocol",
         choices=["http", "https"],
-        hooks={
-            "answer": protocolAnswerHook
-        }
+        validators=[setPortNumberByProtocol]
     )
 
     suite.addQuestion(

@@ -76,7 +76,7 @@ def getHelp(num1, op, num2):
 
 
 def checkAnswer(num1, op, num2):
-    def _validator(value, context):
+    def _validator(value, question, context):
         if op == "+":
             res = int(num1) + int(num2)
         elif op == "-":
@@ -85,7 +85,9 @@ def checkAnswer(num1, op, num2):
             raise ValueError(f"Unknown operator: {op}")
         
         if res != value:
-            raise ValueError("It's wrong")
+            raise ValueError(
+                f"{question.title} not equals to {value}, try again"
+            )
     return _validator
 
 
