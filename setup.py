@@ -6,7 +6,9 @@ from distutils.core import setup
 from kerdezo import __version__ as package_version
 
 REQUIREMENTS = [
-    l.strip() for l in open("requirements.txt", "r", encoding="utf8").readlines()
+    req.strip() for req in open(
+        "requirements.txt", "r", encoding="utf8"
+    ).readlines()
 ]
 
 setup(
