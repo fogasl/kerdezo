@@ -2,6 +2,8 @@
 
 Ask questions interactively in console applications.
 
+[![Python application](https://github.com/fogasl/kerdezo/actions/workflows/python-app.yml/badge.svg)](https://github.com/fogasl/kerdezo/actions/workflows/python-app.yml)
+
 ## Key features
 
 - No dependencies
