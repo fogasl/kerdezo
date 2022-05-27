@@ -14,11 +14,45 @@ class RandomInt:
         self.val = random.randint(min, max)
 
     def __str__(self):
-        unit = "zero one two three four five six seven eight nine".split()
-        teen = "ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split()
-        ten = "- - twenty thirty forty fifty sixty seventy eighty ninety".split()
-        n = self.val
+        unit = [
+            "zero",
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+            "six",
+            "seven",
+            "eight",
+            "nine"
+        ]
+        teen = [
+            "ten",
+            "eleven",
+            "twelve",
+            "thirteen",
+            "fourteen",
+            "fifteen",
+            "sixteen",
+            "seventeen",
+            "eighteen",
+            "nineteen"
+        ]
+        ten = [
+            "-",
+            "-",
+            "twenty",
+            "thirty",
+            "forty",
+            "fifty",
+            "sixty",
+            "seventy",
+            "eighty",
+            "ninety"
+        ]
+
         res = ""
+
         if 0 < self.val < 10:
             res = unit[self.val]
         elif 10 <= self.val < 20:
@@ -83,7 +117,7 @@ def checkAnswer(num1, op, num2):
             res = int(num1) - int(num2)
         else:
             raise ValueError(f"Unknown operator: {op}")
-        
+
         if res != value:
             raise ValueError(
                 f"{question.title} not equals to {value}, try again"
@@ -97,7 +131,8 @@ def failHandler(err, context):
 
 if __name__ == "__main__":
     suite = Kerdezo(
-        startMessage="Let's see how do you do with numbers. Give you answers as numbers.",
+        startMessage="""Let's see how do you do with numbers.
+Give you answers as numbers.""",
         endMessage="Good job!",
         failHandler=failHandler
     )

@@ -1,5 +1,6 @@
 from kerdezo import Kerdezo, Question
 
+
 class YesNoQuestion(Question):
     def __init__(self, title, **kwargs):
         super().__init__(title, **kwargs)
@@ -8,6 +9,7 @@ class YesNoQuestion(Question):
     @staticmethod
     def validator(value, question, context):
         pass
+
 
 if __name__ == "__main__":
     suite = Kerdezo()

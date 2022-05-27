@@ -3,33 +3,42 @@
 
 import re
 
+
 class StringValidators:
     @staticmethod
     def equal(value, message="Must equal to {expected}"):
         def _validator(expected, question=None, context=None):
             if value != expected:
-                raise ValueError(message.format(value=value, expected=expected))
+                raise ValueError(
+                    message.format(value=value, expected=expected)
+                )
         return _validator
 
     @staticmethod
     def notEqual(value, message="Must not equal to {notExpected}"):
         def _validator(notExpected, question=None, context=None):
             if value == notExpected:
-                raise ValueError(message.format(value=value, notExpected=notExpected))
+                raise ValueError(
+                    message.format(value=value, notExpected=notExpected)
+                )
         return _validator
 
     @staticmethod
     def minimumLength(length, message="Minimum length is {length}"):
         def _validator(value, question=None, context=None):
             if len(value) < length:
-                raise ValueError(message.format(value=value, length=length))
+                raise ValueError(
+                    message.format(value=value, length=length)
+                )
         return _validator
 
     @staticmethod
     def maximumLength(length, message="Maximum length is: {length}"):
         def _validator(value, question=None, context=None):
             if len(value) > length:
-                raise ValueError(message.format(value=value, length=length))
+                raise ValueError(
+                    message.format(value=value, length=length)
+                )
         return _validator
 
     @staticmethod
@@ -42,7 +51,11 @@ class StringValidators:
     @staticmethod
     def emailAddress(message="Invalid e-mail address: {value}"):
         def _validator(value, question=None, context=None):
-            m = re.match(r"^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,9})+$", value)
+            m = re.match(
+                r"^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,9})+$",
+                value
+            )
+
             if not m:
                 raise ValueError(message.format(value=value))
         return _validator
@@ -53,14 +66,18 @@ class IntegerValidators:
     def equal(value, message="Must equal to {expected}"):
         def _validator(expected, question=None, context=None):
             if value != expected:
-                raise ValueError(message.format(value=value, expected=expected))
+                raise ValueError(
+                    message.format(value=value, expected=expected)
+                )
         return _validator
 
     @staticmethod
     def notEqual(value, message="Must not equal to {notExpected}"):
         def _validator(notExpected, question=None, context=None):
             if value == notExpected:
-                raise ValueError(message.format(value=value, notExpected=notExpected))
+                raise ValueError(
+                    message.format(value=value, notExpected=notExpected)
+                )
         return _validator
 
     @staticmethod

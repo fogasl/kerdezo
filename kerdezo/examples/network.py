@@ -3,6 +3,7 @@ import sys
 
 from kerdezo import Kerdezo
 
+
 def ipAddressValidator(value, question, context):
     ipaddress.ip_address(value)  # Raises exception on invalid IP address input
 

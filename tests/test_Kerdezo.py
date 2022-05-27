@@ -29,7 +29,7 @@ class KerdezoTests(unittest.TestCase):
     def test_kerdezo_add_question_invalid_type(self):
         k = Kerdezo()
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             k.addQuestion(333)
 
     def test_kerdezo_add_questions_same_dest(self):

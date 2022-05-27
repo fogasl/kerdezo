@@ -1,12 +1,8 @@
 """*Kerdezo*: ask questions interactively in console applications.
 """
 
-import logging
-
 from getpass import getpass
 import sys
-
-logger = logging.getLogger(__name__)
 
 __version__ = "0.1.0"
 
@@ -31,13 +27,13 @@ class Question:
 
     # Title of the question
     title = ""
-    # Key name in the result array in which the answer is stored for this question
+    # Key name in the result dict in which the answer is stored for question
     dest = None
     # Default answer for the question
     default = None
     # Expected type of the answer
     type = str
-    # Whether the answer should echo or not. Disable on password prompt or sensitive data
+    # Whether the answer should echo or not. Disable on password prompt
     echo = True
     # Possible answers for the question
     choices = []
@@ -76,12 +72,15 @@ class Question:
         choices = kwargs.get("choices", [])
 
         # Find duplicate choices
-        if len({i: choices.count(i) for i in choices}.values()) != len(choices):
+        keys = {i: choices.count(i) for i in choices}.values()
+        if len(keys) != len(choices):
             raise ValueError("Trying to add the same choice multiple times")
 
-        # If choices and default value is provided, choices should include default
+        # If choices and default value provided, choices should include default
         defaultValue = kwargs.get("default", None)
-        if defaultValue is not None and len(choices) > 0 and defaultValue not in choices:
+        hasChoices = len(choices) > 0
+        noDefault = defaultValue not in choices
+        if defaultValue is not None and hasChoices and noDefault:
             raise ValueError("Default value not included in 'choices'")
 
         if defaultValue is not None and type(defaultValue) != typ:
@@ -92,12 +91,46 @@ class Question:
         for choice in choices:
             if not isinstance(choice, typ):
                 raise ValueError(
-                    f"Invalid type of choice: {choice} (expected: {typ.__name__})"
+                    f"Invalid type of choice: {choice}\
+                    (expected: {typ.__name__})"
                 )
 
         self.title = title
         self.type = typ
         self.__dict__.update(**kwargs)
+
+    def validate(self, answer, context=None):
+        """Validate the given answer against the question.
+
+        Args:
+            answer (any): Type-converted answer to the question
+            context (Kerdezo, optional): Originator suite. Defaults to None.
+
+        Raises:
+            InteractiveError: the answer is none of the choices (if any)
+            ValueError: validation fails
+
+        Returns:
+            bool: `True` if answer passed validation, `False` otherwise.
+        """
+        res = False
+
+        # Validate choices
+        if len(self.choices) > 0:
+            if answer not in self.choices:
+                raise InteractiveError(
+                    f"Choose one from the following: {self.getChoices()}"
+                )
+
+        if len(self.validators) > 0:
+            for validator in self.validators:
+                validator(answer, self, context)
+            res = True
+        else:
+            # Store answer
+            res = True
+
+        return res
 
     def getChoices(self):
         """Returns the possible values ('choices') of the question as a
@@ -155,7 +188,7 @@ class Kerdezo:
     # Message to print if errors occurred and failBehaviour is not "retry"
     errorMessage = None
     # What to do if an answer fails on type conversion or validation
-    failBehaviour = "retry" # or "continue" or "stop"
+    failBehaviour = "retry"  # or "continue" or "stop"
     # Method to handle type conversion or validation errors
     failHandler = None
     # Method to handle test abortion (e.g. Ctrl+C on console)
@@ -184,13 +217,14 @@ class Kerdezo:
         res = [q for q in self._questions if q.dest == question.dest]
         if len(res) > 0:
             raise InteractiveError(
-                f"Trying to add question with the same 'dest' twice: {question.dest}"
+                f"Trying to add question with the same 'dest' twice:\
+                {question.dest}"
             )
 
-        if self.helpInvoker is not None and (self.helpInvoker == \
-            question.default or self.helpInvoker in question.choices):
+        if self.helpInvoker is not None and (self.helpInvoker ==
+           question.default or self.helpInvoker in question.choices):
             raise InteractiveError(
-                f"'default' or 'choices' conflicts with 'helpInvoker'"
+                "'default' or 'choices' conflicts with 'helpInvoker'"
             )
 
         self._questions.append(question)
@@ -209,22 +243,99 @@ class Kerdezo:
             self._answers[question.dest] = value
         return True
 
+    def _printMessage(self, msg, outfile):
+        if msg is not None:
+            print(msg, file=outfile)
+
+    def _handleAbort(self):
+        if callable(self.abortHandler):
+            self.abortHandler(self)
+
     def _handleFail(self, err, question):
         if callable(self.failHandler):
             self.failHandler(err, self)
-        return False
+
+    def _handleException(self, err, question):
+        ok = False
+
+        if self.failBehaviour == "stop":
+            raise InteractiveError(err)
+
+        elif self.failBehaviour == "retry":
+            self._handleFail(err, question)
+
+        elif self.failBehaviour == "continue":
+            if question.dest not in self._errors:
+                self._errors[question.dest] = []
+            self._errors[question.dest].append(err)
+            ok = True
+
+        return ok
+
+    def _ask(self, question, inputFn, silentInputFn, outfile):
+        ok = False
+
+        while not ok:
+            try:
+                fn = inputFn if question.echo else silentInputFn
+                # TODO handle GetPassWarning
+                # TODO custom question formatting?
+                raw = fn(str(question) + ": ")
+
+                # Handle help invocation
+                if (self.helpInvoker is not None and
+                   raw == self.helpInvoker):
+                    print(question.getHelp(), file=outfile)
+                    continue
+
+                # Check and store if question has default answer
+                if raw == "" and question.default is not None:
+                    ok = self._answer(question, question.default)
+                    break
+
+                # Convert to the appropriate type
+                if question.type is not None:
+                    raw = question.type(raw)
+
+                ok = question.validate(raw, self)
+
+                if ok:
+                    self._answer(question, raw)
+            except Exception as ex:
+                ok = self._handleException(ex, question)
 
     def addQuestion(self, question, **kwargs):
+        """Add a question to the suite.
+
+        Args:
+            question (Question | str): Question instance or question title
+
+        Raises:
+            TypeError: Invalid type for 'question'
+
+        Returns:
+            Kerdezo: Kerdezo suite for method chaining
+        """
         if isinstance(question, Question):
             self._addQuestion(question)
         elif isinstance(question, str):
             quest = Question(question, **kwargs)
             self._addQuestion(quest)
         else:
-            raise ValueError("Invalid value for 'question' (expected 'str' or 'Question')")
+            raise TypeError(
+                "Invalid type for 'question' (expected 'str' or 'Question')"
+            )
         return self
 
     def ask(self, **kwargs):
+        """Start asking questions.
+
+        Raises:
+            InteractiveError: No questions to ask
+
+        Returns:
+            dict: Answers to the questions
+        """
         reset = kwargs.get("reset", True)
         inputFn = kwargs.get("inputFn", input)
         silentInputFn = kwargs.get("silentInputFn", getpass)
@@ -236,74 +347,36 @@ class Kerdezo:
         if len(self._questions) == 0:
             raise InteractiveError("No questions to ask")
 
-        if self.startMessage is not None:
-            print(self.startMessage, file=outfile)
+        self._printMessage(self.startMessage, outfile)
 
         try:
             for question in self._questions:
-                ok = False
-                while not ok:
-                    try:
-                        fn = inputFn if question.echo else silentInputFn
-                        # TODO handle GetPassWarning
-                        # TODO custom question formatting?
-                        raw = fn(str(question) + ": ")
-
-                        # Handle help invocation
-                        if (self.helpInvoker is not None and raw == self.helpInvoker):
-                            print(question.getHelp(), file=outfile)
-                            continue
-
-                        # Check and store if question has default answer
-                        if raw == "" and question.default is not None:
-                            ok = self._answer(question, question.default)
-                            break
-
-                        # Convert to the appropriate type
-                        if question.type is not None:
-                            raw = question.type(raw)
-
-                        # Run through validators
-                        if len(question.choices) > 0:
-                            if raw not in question.choices:
-                                raise InteractiveError(
-                                    f"Choose one from the following: {question.getChoices()}"
-                                )
-                            else:
-                                ok = self._answer(question, raw)
-
-                        if len(question.validators) > 0:
-                            for validator in question.validators:
-                                validator(raw, question, self)
-                            ok = self._answer(question, raw)
-                        else:
-                            ok = self._answer(question, raw)
-                    except Exception as ex:
-                        if self.failBehaviour == "stop":
-                            raise InteractiveError(ex)
-                        elif self.failBehaviour == "retry":
-                            ok = self._handleFail(ex, question)
-                        elif self.failBehaviour == "continue":
-                            if question.dest not in self._errors:
-                                self._errors[question.dest] = []
-                            self._errors[question.dest].append(ex)
-                            ok = True
+                self._ask(question, inputFn, silentInputFn, outfile)
 
             if len(self._errors) > 0:
-                if self.errorMessage is not None:
-                    print(self.errorMessage, file=outfile)
+                self._printMessage(self.errorMessage, outfile)
             else:
-                if self.endMessage is not None:
-                    print(self.endMessage, file=outfile)
+                self._printMessage(self.endMessage, outfile)
 
             return self._answers
         except (ValueError, InteractiveError) as ex:
             self._handleFail(ex, question)
         except KeyboardInterrupt:
-            if callable(self.abortHandler):
-                self.abortHandler(self)
+            self._handleAbort()
 
     def getQuestion(self, question):
+        """Get a particular question.
+
+        Args:
+            question (Question | str): Question instance or 'dest'
+
+        Raises:
+            TypeError: Invalid type for 'question'
+            ValueError: Question not found
+
+        Returns:
+            Question: Question instance
+        """
         if isinstance(question, Question):
             filtered = [q for q in self._questions if q == question]
         elif isinstance(question, str):
@@ -319,6 +392,17 @@ class Kerdezo:
         return filtered[0]
 
     def getAnswer(self, question):
+        """Get the answer to a particular question.
+
+        Args:
+            question (Question | str): Question instance or 'dest'
+
+        Raises:
+            TypeError: Invalid type for 'question'
+
+        Returns:
+            Any: Answer represented by an appropriate type
+        """
         res = None
 
         if isinstance(question, Question):
@@ -333,6 +417,17 @@ class Kerdezo:
         return res
 
     def getErrors(self, question):
+        """Get errors that occurred during the answering.
+
+        Args:
+            question (Question | str): Question instance or 'dest'
+
+        Raises:
+            TypeError: Invalid type for 'question'
+
+        Returns:
+            list: list of errors
+        """
         res = None
 
         if isinstance(question, Question):

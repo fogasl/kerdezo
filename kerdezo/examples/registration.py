@@ -95,7 +95,6 @@ To get help on a question, type '?' (without apostrophes)
         failHandler=failHandler
     )
 
-
     # Add questions
     suite.addQuestion(
         "First name",
@@ -154,7 +153,7 @@ To get help on a question, type '?' (without apostrophes)
         echo=False,
         dest=None,  # Do not store in the output
         validators=[
-            validateRepeatPassword # Validate against first typed password
+            validateRepeatPassword  # Validate against first typed password
         ]
     )
 
