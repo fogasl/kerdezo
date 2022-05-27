@@ -2,6 +2,7 @@ import unittest
 
 from kerdezo import Question
 
+
 class QuestionTests(unittest.TestCase):
 
     def test_question_ctor_ok(self):

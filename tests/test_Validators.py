@@ -5,6 +5,7 @@ from kerdezo.validators import (
     IntegerValidators
 )
 
+
 class ValidatorTests(unittest.TestCase):
     def test_validator_string_equal_ok(self):
         fn = StringValidators.equal("fubar")

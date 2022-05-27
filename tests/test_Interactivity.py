@@ -1,4 +1,3 @@
-from distutils.command.build_scripts import first_line_re
 import os
 import unittest
 
@@ -9,6 +8,7 @@ from kerdezo import (
 )
 
 class InteractiveTests(unittest.TestCase):
+
     @staticmethod
     def answerMachine():
         counter = -1

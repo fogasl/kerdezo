@@ -6,6 +6,7 @@ from kerdezo import (
     InteractiveError
 )
 
+
 class KerdezoTests(unittest.TestCase):
 
     def test_kerdezo_ctor_ok(self):
