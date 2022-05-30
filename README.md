@@ -7,7 +7,16 @@ Ask questions interactively in console applications.
 ## Key features
 
 - No dependencies
-- Highly customizable (question formatting, input validation, fail behaviour etc.)
+- Built-in validators for the most common use cases
+- Highly customizable (input validation, fail behaviour etc.)
+- Has unit tests and high code coverage
+
+## In progress
+
+- Load from / save to JSON
+- Custom question formatting
+- Multiline user input
+- Recorders: classes that record information as the questionnaire progress
 
 ## Installation
 
@@ -39,7 +48,26 @@ See the `kerdezo/examples` directory for more examples.
 
 A `kerdezo` suite consists of *Questions*.
 
-### Start and end messages
+Questions are asked in the order they were added to the `Kerdezo` suite.
+
+Question can have a default value or possible values to choose from
+(`choices`).
+
+Answer on the question is stored in a dictionary, where the key field is
+the one that defined in the question's `dist` property. If omitted, `dist`
+become the question title itself.
+
+`validators` contains a list of callables that validate the answer to the
+question. Validators are run in the order they are defined in the list.
+
+Validator functions must have three input args:
+
+* `value` is the type-converted user input
+* `question` is the question instance on what validation is happening
+* `context` is the `Kerdezo` suite that originated the question.
+
+Validator functions may raise `ValueError` if validation fails at some point.
+Returning value is not required.
 
 ### Fail behaviour
 
@@ -53,4 +81,6 @@ actions can take place. This program supports the following behaviours:
   case, the returned object contains the appropriate answers only.
 - `stop`: the program stops on the first occurring error.
 
-### Error reporting
+## License
+
+BSD-3-Clause.

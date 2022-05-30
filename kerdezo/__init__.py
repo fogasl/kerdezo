@@ -18,8 +18,9 @@ class Question:
     (`choices`).
     `validators` contains a list of callables that validate the answer to the
     question. Validators are run in the order they are defined in the list.
-    Validator functions must have two input args:
+    Validator functions must have three input args:
     * `value` is the type-converted user input
+    * `question` is the question instance on what validation is happening
     * `context` is the `Kerdezo` suite that originated the question.
     Validator functions may raise `ValueError` if validation fails on some
     point. Returning value is not required.
